@@ -12,6 +12,26 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type bpfEvent struct {
+	Saddr  [16]byte /* uint128 */
+	Daddr  [16]byte /* uint128 */
+	TsUs   uint64
+	SpanUs uint64
+	RxB    uint64
+	TxB    uint64
+	Pid    uint32
+	Sport  uint16
+	Dport  uint16
+	Family uint16
+	Comm   [16]uint8
+	_      [6]byte
+}
+
+type bpfIdent struct {
+	Pid  uint32
+	Comm [16]int8
+}
+
 // loadBpf returns the embedded CollectionSpec for bpf.
 func loadBpf() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_BpfBytes)
@@ -53,14 +73,18 @@ type bpfSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type bpfProgramSpecs struct {
-	KprobeExecve *ebpf.ProgramSpec `ebpf:"kprobe_execve"`
+	InetSockSetState *ebpf.ProgramSpec `ebpf:"inet_sock_set_state"`
 }
 
 // bpfMapSpecs contains maps before they are loaded into the kernel.
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type bpfMapSpecs struct {
-	KprobeMap *ebpf.MapSpec `ebpf:"kprobe_map"`
+	Birth    *ebpf.MapSpec `ebpf:"birth"`
+	Events   *ebpf.MapSpec `ebpf:"events"`
+	EventsBf *ebpf.MapSpec `ebpf:"events_bf"`
+	Idents   *ebpf.MapSpec `ebpf:"idents"`
+	TempAaa  *ebpf.MapSpec `ebpf:"tempAaa"`
 }
 
 // bpfObjects contains all objects after they have been loaded into the kernel.
@@ -82,12 +106,20 @@ func (o *bpfObjects) Close() error {
 //
 // It can be passed to loadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type bpfMaps struct {
-	KprobeMap *ebpf.Map `ebpf:"kprobe_map"`
+	Birth    *ebpf.Map `ebpf:"birth"`
+	Events   *ebpf.Map `ebpf:"events"`
+	EventsBf *ebpf.Map `ebpf:"events_bf"`
+	Idents   *ebpf.Map `ebpf:"idents"`
+	TempAaa  *ebpf.Map `ebpf:"tempAaa"`
 }
 
 func (m *bpfMaps) Close() error {
 	return _BpfClose(
-		m.KprobeMap,
+		m.Birth,
+		m.Events,
+		m.EventsBf,
+		m.Idents,
+		m.TempAaa,
 	)
 }
 
@@ -95,12 +127,12 @@ func (m *bpfMaps) Close() error {
 //
 // It can be passed to loadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type bpfPrograms struct {
-	KprobeExecve *ebpf.Program `ebpf:"kprobe_execve"`
+	InetSockSetState *ebpf.Program `ebpf:"inet_sock_set_state"`
 }
 
 func (p *bpfPrograms) Close() error {
 	return _BpfClose(
-		p.KprobeExecve,
+		p.InetSockSetState,
 	)
 }
 
