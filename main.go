@@ -9,12 +9,14 @@ import (
 	"encoding/binary"
 	"errors"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/ringbuf"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sys/unix"
 
 	"github.com/cilium/ebpf/rlimit"
@@ -22,7 +24,15 @@ import (
 
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go bpf tcplife.c -- -I./headers
 
+var ()
+
 func main() {
+
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":2112", nil)
+	}()
+
 	// Subscribe to signals for terminating the program.
 	stopper := make(chan os.Signal, 1)
 	signal.Notify(stopper, os.Interrupt, syscall.SIGTERM)
@@ -39,10 +49,6 @@ func main() {
 	}
 	defer objs.Close()
 
-	// Open a tracepoint and attach the pre-compiled program. Each time
-	// the kernel function enters, the program will increment the execution
-	// counter by 1. The read loop below polls this map value once per
-	// second.
 	// The first two arguments are taken from the following pathname:
 	// /sys/kernel/tracing/events/sock/inet_sock_set_state
 	// sudo ls /sys/kernel/tracing/events/sock/inet_sock_set_state/
