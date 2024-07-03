@@ -5,7 +5,7 @@ run: clean build
 	sudo ./ebpf_exporter
 
 build: 
-	$(GO) generate
+	$(GO) generate ./...
 	$(GO) build
 
 clean:
