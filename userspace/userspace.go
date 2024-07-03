@@ -10,20 +10,27 @@ import (
 
 // ebpf的userspace部分
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go bpf ../kern/tcplife.c -- -I../kern/headers
-
 var (
-	EventCh = make(chan event.IEvent, 100)
+	stopChannels = make([]chan struct{}, 0)
 )
 
-func Run(stopper <-chan struct{}) {
+func registerEbpf(init func(<-chan struct{}, chan<- event.IEvent), eventCh chan<- event.IEvent) {
+	stopper := make(chan struct{}, 1)
+	init(stopper, eventCh)
+	stopChannels = append(stopChannels, stopper)
+}
+
+func Run(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 	// Allow the current process to lock memory for eBPF resources.
 	if err := rlimit.RemoveMemlock(); err != nil {
 		log.Fatal(err)
 	}
-	tcpliftstoper := make(chan struct{}, 1)
-	initTcpLife(tcpliftstoper)
+
+	//注册ebpf程序
+	registerEbpf(initTcpLife, eventCh)
 
 	<-stopper
-	tcpliftstoper <- struct{}{}
+	for _, stopCh := range stopChannels {
+		stopCh <- struct{}{}
+	}
 }

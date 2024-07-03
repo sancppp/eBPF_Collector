@@ -6,15 +6,16 @@ import (
 	"encoding/binary"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/ringbuf"
 	"golang.org/x/sys/unix"
 )
 
-func initTcpLife(stopper <-chan struct{}) {
-	log.Println("initTcpLife")
-	defer log.Println("initTcpLife exit")
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go bpf ../kern/tcplife.c -- -I../kern/headers
+
+func initTcpLife(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 	// Load pre-compiled programs and maps into the kernel.
 	objs := bpfObjects{}
 	if err := loadBpfObjects(&objs, nil); err != nil {
@@ -72,18 +73,20 @@ func initTcpLife(stopper <-chan struct{}) {
 		}
 		// 打印 bpfEvent 结构体的内容
 		log.Printf("pid: %d\tcomm: %s\nsaddr: %v\tdaddr: %v\tts_us: %d\tspan_us: %d\trxb: %d\ttxb: %d\tsport: %d\tdport: %d\tfamily: %d\n", bpfevent.Pid, unix.ByteSliceToString(bpfevent.Comm[:]), bpfevent.Saddr, bpfevent.Daddr, bpfevent.TsUs, bpfevent.SpanUs, bpfevent.RxB, bpfevent.TxB, bpfevent.Sport, bpfevent.Dport, bpfevent.Family)
-		EventCh <- event.Tcplife_event{
-			Saddr:  bpfevent.Saddr,
-			Daddr:  bpfevent.Daddr,
-			TsUs:   bpfevent.TsUs,
-			SpanUs: bpfevent.SpanUs,
-			RxB:    bpfevent.RxB,
-			TxB:    bpfevent.TxB,
-			Pid:    bpfevent.Pid,
-			Sport:  bpfevent.Sport,
-			Dport:  bpfevent.Dport,
-			Family: bpfevent.Family,
-			Comm:   unix.ByteSliceToString(bpfevent.Comm[:]),
+		tcpevent := event.Tcplife_event{
+			Timestamp: time.Now().Unix(),
+			Saddr:     bpfevent.Saddr,
+			Daddr:     bpfevent.Daddr,
+			TsUs:      bpfevent.TsUs,
+			SpanUs:    bpfevent.SpanUs,
+			RxB:       bpfevent.RxB,
+			TxB:       bpfevent.TxB,
+			Pid:       bpfevent.Pid,
+			Sport:     bpfevent.Sport,
+			Dport:     bpfevent.Dport,
+			Family:    bpfevent.Family,
+			Comm:      unix.ByteSliceToString(bpfevent.Comm[:]),
 		}
+		eventCh <- tcpevent
 	}
 }
