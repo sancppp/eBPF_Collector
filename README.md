@@ -8,3 +8,7 @@
 参考：
 - [text](https://github.com/cloudflare/ebpf_exporter)
 - [text](https://github.com/gojue/ecapture)
+
+
+sudo bpftrace -e 'kfunc:udp_sendmsg { printf("UDP sendmsg\n"); printf("%lu\n", args->len); }'
+sudo bpftrace -e 'kfunc:udp_sendmsg { printf("UDP sendmsg\n"); printf("%lu\n", args->sk->__sk_common.skc_dport); }'

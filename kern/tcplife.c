@@ -30,30 +30,18 @@ struct {
   __type(key, struct sock *);
   __type(value, struct ident);
 } idents SEC(".maps");
-struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, MAX_ENTRIES);
-  __type(key, int);
-  __type(value, struct Event);
-} tempAaa SEC(".maps");
-
-struct {
-  __uint(type, BPF_MAP_TYPE_PERF_EVENT_ARRAY);
-  __uint(key_size, sizeof(__u32));
-  __uint(value_size, sizeof(__u32));
-} events SEC(".maps");
 
 struct {
   __uint(type, BPF_MAP_TYPE_RINGBUF);
   __uint(max_entries, 1 << 24);
-} events_bf SEC(".maps");
+} events_tcplife_rb SEC(".maps");
 
 SEC("tracepoint/sock/inet_sock_set_state")
 int inet_sock_set_state(struct trace_event_raw_inet_sock_set_state *args) {
   __u64 ts, *start, delta_us, rx_b, tx_b;
   struct ident ident = {}, *identp;
   __u16 sport, dport, family;
-  struct Event event = {};
+  struct Tcplife_event event = {};
 
   struct tcp_sock *tp;
   struct sock *sk;
@@ -146,16 +134,14 @@ int inet_sock_set_state(struct trace_event_raw_inet_sock_set_state *args) {
     bpf_probe_read_kernel(&event.daddr, sizeof(args->daddr_v6),
                           BPF_CORE_READ(args, daddr_v6));
   }
-  struct Event *task_info =
-      bpf_ringbuf_reserve(&events_bf, sizeof(struct Event), 0);
+  struct Tcplife_event *task_info =
+      bpf_ringbuf_reserve(&events_tcplife_rb, sizeof(struct Tcplife_event), 0);
   if (!task_info) {
     return 0;
   } else {
     *task_info = event;
     bpf_ringbuf_submit(task_info, 0);
   }
-  bpf_perf_event_output(args, &events, BPF_F_CURRENT_CPU, &event,
-                        sizeof(event));
 
 cleanup:
   bpf_map_delete_elem(&birth, &sk);

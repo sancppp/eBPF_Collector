@@ -10,3 +10,5 @@ build:
 
 clean:
 	rm -f ebpf_exporter
+	find . -name "*_bpfeb.*" -delete
+	find . -name "*_bpfel.*" -delete

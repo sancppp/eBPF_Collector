@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "*.md": "markdown",
-    "bpf_core_read.h": "c"
+    "bpf_core_read.h": "c",
+    "vmlinux.h": "c"
   }
 }

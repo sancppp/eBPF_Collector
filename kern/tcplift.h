@@ -11,7 +11,7 @@ struct ident {
   char comm[TASK_COMM_LEN];
 };
 
-struct Event {
+struct Tcplife_event {
   unsigned __int128 saddr;
   unsigned __int128 daddr;
   __u64 ts_us;
@@ -24,6 +24,6 @@ struct Event {
   __u16 family;
   __u8 comm[TASK_COMM_LEN];
 };
-const struct Event *unused __attribute__((unused));
+const struct Tcplife_event *unused __attribute__((unused));
 
 #endif /* __TCPLIFE_H */
