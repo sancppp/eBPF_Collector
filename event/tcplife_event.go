@@ -15,6 +15,18 @@ type Tcplife_event struct {
 	Comm      string
 }
 
-func (Tcplife_event) Name() string {
+func (Tcplife_event) GetName() string {
 	return "tcplife_event"
+}
+
+func (e Tcplife_event) GetTimestamp() int64 {
+	return e.Timestamp
+}
+
+func (e Tcplife_event) GetPid() uint32 {
+	return e.Pid
+}
+
+func (e Tcplife_event) GetComm() string {
+	return e.Comm
 }
