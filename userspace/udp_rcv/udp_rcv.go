@@ -73,7 +73,7 @@ func InitUdpRcv(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 			log.Printf("parsing ringbuf event: %s", err)
 			continue
 		}
-		eventCh <- event.UdpSendmsg_event{
+		eventCh <- event.Udp_event{
 			Timestamp: time.Now().Unix(),
 			Flag:      bpfevent.Flag,
 			Pid:       bpfevent.Pid,

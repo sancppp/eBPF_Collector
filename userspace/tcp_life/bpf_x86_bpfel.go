@@ -12,24 +12,19 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-type bpfIdent struct {
-	Pid  uint32
-	Comm [16]int8
-}
-
-type bpfTcplifeEvent struct {
-	Saddr  [16]byte /* uint128 */
-	Daddr  [16]byte /* uint128 */
-	TsUs   uint64
-	SpanUs uint64
-	RxB    uint64
-	TxB    uint64
-	Pid    uint32
-	Sport  uint16
-	Dport  uint16
-	Family uint16
-	Comm   [16]uint8
-	_      [6]byte
+type bpfTcpEvent struct {
+	Flag  uint16
+	_     [2]byte
+	Pid   uint32
+	_     [8]byte
+	Daddr [16]byte /* uint128 */
+	Dport uint16
+	_     [14]byte
+	Saddr [16]byte /* uint128 */
+	Sport uint16
+	Len   uint16
+	Comm  [16]uint8
+	_     [12]byte
 }
 
 // loadBpf returns the embedded CollectionSpec for bpf.
@@ -73,16 +68,15 @@ type bpfSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type bpfProgramSpecs struct {
-	InetSockSetState *ebpf.ProgramSpec `ebpf:"inet_sock_set_state"`
+	KprobeTcpCleanupRbuf *ebpf.ProgramSpec `ebpf:"kprobe__tcp_cleanup_rbuf"`
+	KprobeTcpSendmsg     *ebpf.ProgramSpec `ebpf:"kprobe__tcp_sendmsg"`
 }
 
 // bpfMapSpecs contains maps before they are loaded into the kernel.
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type bpfMapSpecs struct {
-	Birth           *ebpf.MapSpec `ebpf:"birth"`
-	EventsTcplifeRb *ebpf.MapSpec `ebpf:"events_tcplife_rb"`
-	Idents          *ebpf.MapSpec `ebpf:"idents"`
+	EventsTcpRb *ebpf.MapSpec `ebpf:"events_tcp_rb"`
 }
 
 // bpfObjects contains all objects after they have been loaded into the kernel.
@@ -104,16 +98,12 @@ func (o *bpfObjects) Close() error {
 //
 // It can be passed to loadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type bpfMaps struct {
-	Birth           *ebpf.Map `ebpf:"birth"`
-	EventsTcplifeRb *ebpf.Map `ebpf:"events_tcplife_rb"`
-	Idents          *ebpf.Map `ebpf:"idents"`
+	EventsTcpRb *ebpf.Map `ebpf:"events_tcp_rb"`
 }
 
 func (m *bpfMaps) Close() error {
 	return _BpfClose(
-		m.Birth,
-		m.EventsTcplifeRb,
-		m.Idents,
+		m.EventsTcpRb,
 	)
 }
 
@@ -121,12 +111,14 @@ func (m *bpfMaps) Close() error {
 //
 // It can be passed to loadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type bpfPrograms struct {
-	InetSockSetState *ebpf.Program `ebpf:"inet_sock_set_state"`
+	KprobeTcpCleanupRbuf *ebpf.Program `ebpf:"kprobe__tcp_cleanup_rbuf"`
+	KprobeTcpSendmsg     *ebpf.Program `ebpf:"kprobe__tcp_sendmsg"`
 }
 
 func (p *bpfPrograms) Close() error {
 	return _BpfClose(
-		p.InetSockSetState,
+		p.KprobeTcpCleanupRbuf,
+		p.KprobeTcpSendmsg,
 	)
 }
 

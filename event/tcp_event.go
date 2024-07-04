@@ -1,6 +1,6 @@
 package event
 
-type Udp_event struct {
+type Tcp_event struct {
 	Timestamp int64
 	Flag      uint16 // 0:send,1:recv
 	Pid       uint32
@@ -12,18 +12,18 @@ type Udp_event struct {
 	Comm      string
 }
 
-func (Udp_event) GetName() string {
-	return "UdpSendmsg_event"
+func (Tcp_event) GetName() string {
+	return "Tcp_event"
 }
 
-func (e Udp_event) GetTimestamp() int64 {
+func (e Tcp_event) GetTimestamp() int64 {
 	return e.Timestamp
 }
 
-func (e Udp_event) GetPid() uint32 {
+func (e Tcp_event) GetPid() uint32 {
 	return e.Pid
 }
 
-func (e Udp_event) GetComm() string {
+func (e Tcp_event) GetComm() string {
 	return e.Comm
 }

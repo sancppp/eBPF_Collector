@@ -4,6 +4,7 @@
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
+#include <bpf_endian.h>
 #include "tcplift.h"
 
 #define MAX_ENTRIES 10240
@@ -18,134 +19,76 @@ const volatile pid_t target_pid = 0;
 const volatile __u16 target_family = 0;
 
 struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, MAX_ENTRIES);
-  __type(key, struct sock *);
-  __type(value, __u64);
-} birth SEC(".maps");
-
-struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, MAX_ENTRIES);
-  __type(key, struct sock *);
-  __type(value, struct ident);
-} idents SEC(".maps");
-
-struct {
   __uint(type, BPF_MAP_TYPE_RINGBUF);
   __uint(max_entries, 1 << 24);
-} events_tcplife_rb SEC(".maps");
+} events_tcp_rb SEC(".maps");
 
-SEC("tracepoint/sock/inet_sock_set_state")
-int inet_sock_set_state(struct trace_event_raw_inet_sock_set_state *args) {
-  __u64 ts, *start, delta_us, rx_b, tx_b;
-  struct ident ident = {}, *identp;
-  __u16 sport, dport, family;
-  struct Tcplife_event event = {};
+SEC("kprobe/tcp_sendmsg")
+int kprobe__tcp_sendmsg(struct pt_regs *ctx) {
+  struct tcp_event event = {};
+  event.flag = 0;
+  event.pid = bpf_get_current_pid_tgid() >> 32;
+  bpf_get_current_comm(event.comm, sizeof(event.comm));
 
-  struct tcp_sock *tp;
-  struct sock *sk;
-  bool found;
-  __u32 pid;
-  int i;
+  struct sock *sk = (struct sock *)PT_REGS_PARM1(ctx);
+  event.len = PT_REGS_PARM3(ctx);
 
-  if (BPF_CORE_READ(args, protocol) != IPPROTO_TCP) return 0;
-
-  family = BPF_CORE_READ(args, family);
-  if (target_family && family != target_family) return 0;
-
-  sport = BPF_CORE_READ(args, sport);
-  if (filter_sport) {
-    found = false;
-    for (i = 0; i < MAX_PORTS; i++) {
-      if (!target_sports[i]) return 0;
-      if (sport != target_sports[i]) continue;
-      found = true;
-      break;
-    }
-    if (!found) return 0;
-  }
-
-  dport = BPF_CORE_READ(args, dport);
-  if (filter_dport) {
-    found = false;
-    for (i = 0; i < MAX_PORTS; i++) {
-      if (!target_dports[i]) return 0;
-      if (dport != target_dports[i]) continue;
-      found = true;
-      break;
-    }
-    if (!found) return 0;
-  }
-
-  sk = (struct sock *)BPF_CORE_READ(args, skaddr);
-  if (BPF_CORE_READ(args, newstate) < TCP_FIN_WAIT1) {
-    ts = bpf_ktime_get_ns();
-    bpf_map_update_elem(&birth, &sk, &ts, BPF_ANY);
-  }
-
-  if (BPF_CORE_READ(args, newstate) == TCP_SYN_SENT ||
-      BPF_CORE_READ(args, newstate) == TCP_LAST_ACK) {
-    pid = bpf_get_current_pid_tgid() >> 32;
-    if (target_pid && pid != target_pid) return 0;
-    ident.pid = pid;
-    bpf_get_current_comm(ident.comm, sizeof(ident.comm));
-    bpf_map_update_elem(&idents, &sk, &ident, BPF_ANY);
-  }
-
-  if (BPF_CORE_READ(args, newstate) != TCP_CLOSE) return 0;
-
-  start = bpf_map_lookup_elem(&birth, &sk);
-  if (!start) {
-    bpf_map_delete_elem(&idents, &sk);
+  u16 family = BPF_CORE_READ(sk, __sk_common.skc_family);
+  if (family == AF_INET) {
+    event.daddr = BPF_CORE_READ(sk, __sk_common.skc_daddr);
+    event.saddr = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
+  } else if (family == AF_INET6) {
+    struct in6_addr dtemp = BPF_CORE_READ(sk, __sk_common.skc_v6_daddr);
+    struct in6_addr stemp = BPF_CORE_READ(sk, __sk_common.skc_v6_rcv_saddr);
+    event.daddr = *(unsigned __int128 *)&dtemp;
+    event.saddr = *(unsigned __int128 *)&stemp;
+  } else {
     return 0;
   }
-  ts = bpf_ktime_get_ns();
-  delta_us = (ts - *start) / 1000;
-
-  identp = bpf_map_lookup_elem(&idents, &sk);
-  pid = identp ? identp->pid : bpf_get_current_pid_tgid() >> 32;
-  if (target_pid && pid != target_pid) goto cleanup;
-
-  tp = (struct tcp_sock *)sk;
-  rx_b = BPF_CORE_READ(tp, bytes_received);
-  tx_b = BPF_CORE_READ(tp, bytes_acked);
-
-  event.ts_us = ts / 1000;
-  event.span_us = delta_us;
-  event.rx_b = rx_b;
-  event.tx_b = tx_b;
-  event.pid = pid;
-  event.sport = sport;
-  event.dport = dport;
-  event.family = family;
-  if (!identp)
-    bpf_get_current_comm(event.comm, sizeof(event.comm));
-  else
-    bpf_probe_read_kernel(event.comm, sizeof(event.comm), (void *)identp->comm);
-  if (family == AF_INET) {
-    bpf_probe_read_kernel(&event.saddr, sizeof(args->saddr),
-                          BPF_CORE_READ(args, saddr));
-    bpf_probe_read_kernel(&event.daddr, sizeof(args->daddr),
-                          BPF_CORE_READ(args, daddr));
-  } else { /*  AF_INET6 */
-    bpf_probe_read_kernel(&event.saddr, sizeof(args->saddr_v6),
-                          BPF_CORE_READ(args, saddr_v6));
-    bpf_probe_read_kernel(&event.daddr, sizeof(args->daddr_v6),
-                          BPF_CORE_READ(args, daddr_v6));
-  }
-  struct Tcplife_event *task_info =
-      bpf_ringbuf_reserve(&events_tcplife_rb, sizeof(struct Tcplife_event), 0);
+  event.dport = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
+  event.sport = BPF_CORE_READ(sk, __sk_common.skc_num);
+  struct tcp_event *task_info =
+      bpf_ringbuf_reserve(&events_tcp_rb, sizeof(struct tcp_event), 0);
   if (!task_info) {
     return 0;
   } else {
     *task_info = event;
     bpf_ringbuf_submit(task_info, 0);
   }
+  return 0;
+}
 
-cleanup:
-  bpf_map_delete_elem(&birth, &sk);
-  bpf_map_delete_elem(&idents, &sk);
+SEC("kprobe/tcp_cleanup_rbuf")
+int kprobe__tcp_cleanup_rbuf(struct pt_regs *ctx) {
+  struct tcp_event event = {};
+  event.flag = 1;
+  event.pid = bpf_get_current_pid_tgid() >> 32;
+  bpf_get_current_comm(event.comm, sizeof(event.comm));
+  struct sock *sk = (struct sock *)PT_REGS_PARM1(ctx);
+  event.len = PT_REGS_PARM2(ctx);
+
+  u16 family = BPF_CORE_READ(sk, __sk_common.skc_family);
+  if (family == AF_INET) {
+    event.daddr = BPF_CORE_READ(sk, __sk_common.skc_daddr);
+    event.saddr = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
+  } else if (family == AF_INET6) {
+    struct in6_addr dtemp = BPF_CORE_READ(sk, __sk_common.skc_v6_daddr);
+    struct in6_addr stemp = BPF_CORE_READ(sk, __sk_common.skc_v6_rcv_saddr);
+    event.daddr = *(unsigned __int128 *)&dtemp;
+    event.saddr = *(unsigned __int128 *)&stemp;
+  } else {
+    return 0;
+  }
+  event.dport = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
+  event.sport = BPF_CORE_READ(sk, __sk_common.skc_num);
+  struct tcp_event *task_info =
+      bpf_ringbuf_reserve(&events_tcp_rb, sizeof(struct tcp_event), 0);
+  if (!task_info) {
+    return 0;
+  } else {
+    *task_info = event;
+    bpf_ringbuf_submit(task_info, 0);
+  }
   return 0;
 }
 

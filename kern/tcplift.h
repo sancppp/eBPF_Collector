@@ -11,19 +11,17 @@ struct ident {
   char comm[TASK_COMM_LEN];
 };
 
-struct Tcplife_event {
-  unsigned __int128 saddr;
-  unsigned __int128 daddr;
-  __u64 ts_us;
-  __u64 span_us;
-  __u64 rx_b;
-  __u64 tx_b;
-  __u32 pid;
-  __u16 sport;
-  __u16 dport;
-  __u16 family;
+struct tcp_event {
+  u16 flag;  // 0:send,1:recv
+  u32 pid;
+  unsigned __int128 daddr;  // 目的ip地址
+  u16 dport;
+  unsigned __int128 saddr;  // 源IP地址
+  u16 sport;
+  u16 len;
   __u8 comm[TASK_COMM_LEN];
 };
-const struct Tcplife_event *unused __attribute__((unused));
+
+const struct tcp_event *unused_ __attribute__((unused));
 
 #endif /* __TCPLIFE_H */
