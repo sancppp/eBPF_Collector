@@ -60,6 +60,7 @@ int kprobe_udp_sendmsg(struct pt_regs *ctx) {
   return 0;
 }
 
+// 接受数据包长度和网络五元组二选一
 SEC("kprobe/udp_recvmsg")
 int kprobe_udp_recvmsg(struct pt_regs *ctx) {
   struct Udp_event event = {};

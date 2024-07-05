@@ -12,7 +12,7 @@ import (
 
 var (
 	//全局ebpf事件管道
-	eventCh = make(chan event.IEvent, 100)
+	eventCh = make(chan event.IEvent, 1000)
 )
 
 func main() {

@@ -4,9 +4,13 @@ import (
 	"ebpf_exporter/event"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
+
+// 过期时间
+const TIMEOUT_S = 60
 
 var (
 	// 指标
@@ -54,7 +58,7 @@ func Comsumer(eventCh <-chan event.IEvent) {
 		switch event_ := event_.(type) {
 		case event.Udp_event:
 			{
-				udpByteCounter.With(prometheus.Labels{
+				tmp := prometheus.Labels{
 					"timestamp": fmt.Sprintf("%d", event_.GetTimestamp()),
 					"protocol":  "udp",
 					"flag":      fmt.Sprintf("%d", event_.Flag),
@@ -64,7 +68,12 @@ func Comsumer(eventCh <-chan event.IEvent) {
 					"dport":     fmt.Sprintf("%d", event_.Dport),
 					"saddr":     fmt.Sprintf("%v", event_.Saddr),
 					"sport":     fmt.Sprintf("%d", event_.Sport),
-				}).Add(float64(event_.Len))
+				}
+				udpByteCounter.With(tmp).Add(float64(event_.Len))
+				go func(tmp *prometheus.Labels) {
+					time.Sleep(TIMEOUT_S * time.Second)
+					udpByteCounter.Delete(*tmp)
+				}(&tmp)
 				udpByteSum.With(prometheus.Labels{
 					"protocol": "udp",
 					"flag":     fmt.Sprintf("%d", event_.Flag),
@@ -74,7 +83,7 @@ func Comsumer(eventCh <-chan event.IEvent) {
 			}
 		case event.Tcp_event:
 			{
-				tcpByteCounter.With(prometheus.Labels{
+				tmp := prometheus.Labels{
 					"timestamp": fmt.Sprintf("%d", event_.GetTimestamp()),
 					"protocol":  "tcp",
 					"flag":      fmt.Sprintf("%d", event_.Flag),
@@ -84,7 +93,12 @@ func Comsumer(eventCh <-chan event.IEvent) {
 					"dport":     fmt.Sprintf("%d", event_.Dport),
 					"saddr":     fmt.Sprintf("%v", event_.Saddr),
 					"sport":     fmt.Sprintf("%d", event_.Sport),
-				}).Add(float64(event_.Len))
+				}
+				tcpByteCounter.With(tmp).Add(float64(event_.Len))
+				go func(tmp *prometheus.Labels) {
+					time.Sleep(TIMEOUT_S * time.Second)
+					tcpByteCounter.Delete(*tmp)
+				}(&tmp)
 				tcpByteSum.With(prometheus.Labels{
 					"protocol": "tcp",
 					"flag":     fmt.Sprintf("%d", event_.Flag),
