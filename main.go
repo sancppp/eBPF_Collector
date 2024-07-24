@@ -1,13 +1,13 @@
 package main
 
 import (
+	"ebpf_exporter/comsumer"
 	"ebpf_exporter/event"
-	"ebpf_exporter/prometheus"
-	"ebpf_exporter/route"
 	"ebpf_exporter/userspace"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var (
@@ -20,11 +20,14 @@ func main() {
 	signal.Notify(stopper, os.Interrupt, syscall.SIGTERM)
 
 	ebpfstopper := make(chan struct{}, 1)
-	defer func() { ebpfstopper <- struct{}{} }()
 
 	go userspace.Run(ebpfstopper, eventCh)
-	go route.Init()
-	go prometheus.Comsumer(eventCh)
-
+	// go route.Init()
+	// go comsumer.StartPrometheus(eventCh)
+	// go comsumer.StartLog(eventCh)
+	// go comsumer.StartPrint(eventCh)
+	go comsumer.StartHttp(eventCh)
 	<-stopper
+	ebpfstopper <- struct{}{}
+	time.Sleep(1 * time.Second)
 }

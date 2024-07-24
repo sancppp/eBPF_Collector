@@ -1,7 +1,7 @@
 package event
 
 type IEvent interface {
-	GetTimestamp() int64
+	GetTimestamp() uint64
 	GetName() string
 	GetPid() uint32
 	GetComm() string

@@ -1,1 +1,3 @@
 ebpf_exporter
+.vscode/settings.json
+ebpf_exporter.log

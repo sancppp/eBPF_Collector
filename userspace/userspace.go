@@ -5,6 +5,8 @@ import (
 
 	"ebpf_exporter/event"
 
+	"ebpf_exporter/userspace/csyscall"
+
 	"github.com/cilium/ebpf/rlimit"
 )
 
@@ -27,6 +29,8 @@ func Run(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 	}
 
 	//注册ebpf程序
+
+	registerEbpf(csyscall.InitSyscall, eventCh)
 
 	<-stopper
 	for _, stopCh := range stopChannels {
