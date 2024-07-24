@@ -5,9 +5,6 @@ import (
 
 	"ebpf_exporter/event"
 
-	tcplife "ebpf_exporter/userspace/tcp_life"
-	udprcv "ebpf_exporter/userspace/udp_rcv"
-
 	"github.com/cilium/ebpf/rlimit"
 )
 
@@ -30,8 +27,6 @@ func Run(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 	}
 
 	//注册ebpf程序
-	registerEbpf(tcplife.InitTcpLife, eventCh)
-	registerEbpf(udprcv.InitUdpRcv, eventCh)
 
 	<-stopper
 	for _, stopCh := range stopChannels {
