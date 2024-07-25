@@ -11,5 +11,7 @@ func Init() {
 	http.Handle("/metrics", promhttp.Handler())
 	log.Println("http server start")
 
-	http.ListenAndServe(":2112", nil)
+	if err := http.ListenAndServe(":2112", nil); err != nil {
+		log.Println("route err: ", err)
+	}
 }

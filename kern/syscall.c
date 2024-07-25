@@ -39,7 +39,7 @@ struct {
     .values =
         {
             // [59] = &sys_exit_execve,
-            [83] = &sys_exit_mkdir,
+            // [83] = &sys_exit_mkdir,
         },
 };
 
@@ -61,8 +61,8 @@ int BPF_PROG(sys_enter, struct pt_regs *regs, long syscall_id) {
   if (sys_cnt) {
     *sys_cnt += 1;
   } else {
-    u64 zero = 0;
-    bpf_map_update_elem(&syscall_cnt, &key, &zero, BPF_ANY);
+    u64 one = 1;
+    bpf_map_update_elem(&syscall_cnt, &key, &one, BPF_ANY);
   }
 
   bpf_tail_call(ctx, &syscall_enter_tail_table, syscall_id);

@@ -2,7 +2,7 @@
 #define __BPF_SYSCALL_TAILCALL_H
 
 struct syscall_event {
-  u8 flag;  // 0 for enter, 1 for exit
+  u8 flag;  // 0 for enter, 1 for exit, 2 counter
   u32 pid;
   u8 comm[TASK_COMM_LEN];
   u32 syscall_id;

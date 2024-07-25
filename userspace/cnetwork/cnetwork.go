@@ -5,6 +5,7 @@ import (
 	"ebpf_exporter/event"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/cilium/ebpf/link"
@@ -65,7 +66,7 @@ func InitCNetwork(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 				continue //脏数据
 			}
 			// 打印 bpfEvent 结构体的内容
-			syscallEvent := event.CNetwork_event{
+			networkevent := event.CNetwork_event{
 				Type:      "Network_event",
 				Timestamp: bpfevent.Timestamp,
 				Pid:       bpfevent.Pid,
@@ -77,7 +78,8 @@ func InitCNetwork(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 				Saddr:     [4]byte{byte(bpfevent.Saddr), byte(bpfevent.Saddr >> 8), byte(bpfevent.Saddr >> 16), byte(bpfevent.Saddr >> 24)},
 				Sport:     bpfevent.Sport,
 			}
-			eventCh <- syscallEvent
+			fmt.Printf("networkevent: %v\n", networkevent)
+			eventCh <- networkevent
 		}
 	}()
 

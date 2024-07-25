@@ -15,7 +15,7 @@ import (
 )
 
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -target amd64 -type syscall_event -type syscallcntkey bpf ../../kern/syscall.c -- -I../../kern/headers
-const TICKER = 5
+const TICKER = 10
 
 func InitSyscall(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 	// Load pre-compiled programs and maps into the kernel.
@@ -70,6 +70,7 @@ func InitSyscall(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 				log.Printf("parsing ringbuf event: %s", err)
 				continue
 			}
+
 			// 打印 bpfEvent 结构体的内容
 			syscallEvent := event.Syscall_event{
 				Type:      "Syscall_event",
