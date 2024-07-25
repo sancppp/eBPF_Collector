@@ -5,7 +5,9 @@ import (
 
 	"ebpf_exporter/event"
 
+	"ebpf_exporter/userspace/cnetwork"
 	"ebpf_exporter/userspace/csyscall"
+	"ebpf_exporter/userspace/fileopen"
 
 	"github.com/cilium/ebpf/rlimit"
 )
@@ -29,7 +31,10 @@ func Run(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 	}
 
 	//注册ebpf程序
-
+	// registerEbpf(tcplife.InitTcpLife, eventCh)
+	// registerEbpf(udprcv.InitUdpRcv, eventCh)
+	registerEbpf(fileopen.InitFileopen, eventCh)
+	registerEbpf(cnetwork.InitCNetwork, eventCh)
 	registerEbpf(csyscall.InitSyscall, eventCh)
 
 	<-stopper

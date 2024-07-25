@@ -61,6 +61,7 @@ func InitFileopen(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 			}
 			// 打印 bpfEvent 结构体的内容
 			syscallEvent := event.Fileopen_event{
+				Type:      "Fileopen_event",
 				Timestamp: bpfevent.Timestamp,
 				Pid:       bpfevent.Pid,
 				Comm:      unix.ByteSliceToString(bpfevent.Comm[:]),

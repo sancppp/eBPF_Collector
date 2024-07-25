@@ -72,6 +72,7 @@ func InitSyscall(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 			}
 			// 打印 bpfEvent 结构体的内容
 			syscallEvent := event.Syscall_event{
+				Type:      "Syscall_event",
 				Timestamp: bpfevent.Timestamp,
 				Flag:      bpfevent.Flag,
 				Pid:       bpfevent.Pid,
@@ -96,6 +97,7 @@ func InitSyscall(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 			iner := objs.SyscallCnt.Iterate()
 			for iner.Next(&key, &value) {
 				eventCh <- event.Syscall_event{
+					Type:      "Syscall_event",
 					Timestamp: uint64(time.Now().Unix()),
 					Flag:      2,
 					Pid:       key.Pid,
