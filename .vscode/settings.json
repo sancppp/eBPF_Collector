@@ -2,6 +2,11 @@
   "files.associations": {
     "*.md": "markdown",
     "bpf_core_read.h": "c",
-    "vmlinux.h": "c"
+    "vmlinux.h": "c",
+    "bpf_endian.h": "c",
+    "bpf_tracing.h": "c",
+    "bpf_helpers.h": "c",
+    "syscall_tailcall.h": "c",
+    "common.h": "c"
   }
 }
