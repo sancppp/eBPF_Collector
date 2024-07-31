@@ -1,12 +1,14 @@
 package event
 
 type Fileopen_event struct {
-	Timestamp uint64
-	Pid       uint32
-	Comm      string
-	Filename  string
-	Fsname    string
-	Cid       string
+	Type          string
+	Timestamp     uint64
+	Pid           uint32
+	Comm          string
+	Filename      string
+	Fsname        string
+	Cid           string
+	ContainerName string
 }
 
 func (Fileopen_event) GetName() string {

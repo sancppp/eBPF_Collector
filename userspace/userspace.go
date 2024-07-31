@@ -31,8 +31,7 @@ func Run(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 	}
 
 	//注册ebpf程序
-	// registerEbpf(tcplife.InitTcpLife, eventCh)
-	// registerEbpf(udprcv.InitUdpRcv, eventCh)
+
 	registerEbpf(fileopen.InitFileopen, eventCh)
 	registerEbpf(cnetwork.InitCNetwork, eventCh)
 	registerEbpf(csyscall.InitSyscall, eventCh)

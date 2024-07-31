@@ -3,6 +3,7 @@ package csyscall
 import (
 	"bytes"
 	"ebpf_exporter/event"
+	"ebpf_exporter/util"
 	"encoding/binary"
 	"errors"
 	"log"
@@ -73,15 +74,16 @@ func InitSyscall(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 
 			// 打印 bpfEvent 结构体的内容
 			syscallEvent := event.Syscall_event{
-				Type:      "Syscall_event",
-				Timestamp: bpfevent.Timestamp,
-				Flag:      bpfevent.Flag,
-				Pid:       bpfevent.Pid,
-				Comm:      unix.ByteSliceToString(bpfevent.Comm[:]),
-				Syscall:   bpfevent.SyscallId,
-				Ret:       bpfevent.Ret,
-				Cid:       unix.ByteSliceToString(bpfevent.Cid[:]),
-				Info:      unix.ByteSliceToString(bpfevent.Info[:]),
+				Type:          "Syscall_event",
+				Timestamp:     bpfevent.Timestamp,
+				Flag:          bpfevent.Flag,
+				Pid:           bpfevent.Pid,
+				Comm:          unix.ByteSliceToString(bpfevent.Comm[:]),
+				Syscall:       bpfevent.SyscallId,
+				Ret:           bpfevent.Ret,
+				Cid:           unix.ByteSliceToString(bpfevent.Cid[:]),
+				ContainerName: util.GetContainerName(unix.ByteSliceToString(bpfevent.Cid[:])),
+				Info:          unix.ByteSliceToString(bpfevent.Info[:]),
 			}
 			eventCh <- syscallEvent
 		}
@@ -94,19 +96,25 @@ func InitSyscall(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 			var (
 				key   bpfSyscallcntkey
 				value uint64
+				keys  []bpfSyscallcntkey
 			)
 			iner := objs.SyscallCnt.Iterate()
 			for iner.Next(&key, &value) {
 				eventCh <- event.Syscall_event{
-					Type:      "Syscall_event",
-					Timestamp: uint64(time.Now().Unix()),
-					Flag:      2,
-					Pid:       key.Pid,
-					Comm:      unix.ByteSliceToString(key.Comm[:]),
-					Syscall:   key.SyscallId,
-					Ret:       int64(value),
-					Cid:       unix.ByteSliceToString(key.Cid[:]),
+					Type:          "Syscall_event",
+					Timestamp:     uint64(time.Now().Unix()),
+					Flag:          2,
+					Pid:           key.Pid,
+					Comm:          unix.ByteSliceToString(key.Comm[:]),
+					Syscall:       key.SyscallId,
+					Ret:           int64(value),
+					Cid:           unix.ByteSliceToString(key.Cid[:]),
+					ContainerName: util.GetContainerName(unix.ByteSliceToString(key.Cid[:])),
 				}
+				keys = append(keys, key)
+			}
+			for _, key := range keys {
+				objs.SyscallCnt.Delete(&key)
 			}
 		}
 	}()

@@ -3,9 +3,9 @@ package cnetwork
 import (
 	"bytes"
 	"ebpf_exporter/event"
+	"ebpf_exporter/util"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/cilium/ebpf/link"
@@ -62,23 +62,25 @@ func InitCNetwork(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 				log.Printf("parsing ringbuf event: %s", err)
 				continue
 			}
+
 			if bpfevent.Saddr == 0 || bpfevent.Daddr == 0 {
 				continue //脏数据
 			}
 			// 打印 bpfEvent 结构体的内容
 			networkevent := event.CNetwork_event{
-				Type:      "Network_event",
-				Timestamp: bpfevent.Timestamp,
-				Pid:       bpfevent.Pid,
-				Comm:      unix.ByteSliceToString(bpfevent.Comm[:]),
-				Cid:       unix.ByteSliceToString(bpfevent.Cid[:]),
-				Flag:      bpfevent.Flag,
-				Daddr:     [4]byte{byte(bpfevent.Daddr), byte(bpfevent.Daddr >> 8), byte(bpfevent.Daddr >> 16), byte(bpfevent.Daddr >> 24)},
-				Dport:     bpfevent.Dport,
-				Saddr:     [4]byte{byte(bpfevent.Saddr), byte(bpfevent.Saddr >> 8), byte(bpfevent.Saddr >> 16), byte(bpfevent.Saddr >> 24)},
-				Sport:     bpfevent.Sport,
+				Type:          "Network_event",
+				Timestamp:     bpfevent.Timestamp,
+				Pid:           bpfevent.Pid,
+				Comm:          unix.ByteSliceToString(bpfevent.Comm[:]),
+				Cid:           unix.ByteSliceToString(bpfevent.Cid[:]),
+				ContainerName: util.GetContainerName(unix.ByteSliceToString(bpfevent.Cid[:])),
+				Flag:          bpfevent.Flag,
+				Daddr:         [4]byte{byte(bpfevent.Daddr), byte(bpfevent.Daddr >> 8), byte(bpfevent.Daddr >> 16), byte(bpfevent.Daddr >> 24)},
+				Dport:         bpfevent.Dport,
+				Saddr:         [4]byte{byte(bpfevent.Saddr), byte(bpfevent.Saddr >> 8), byte(bpfevent.Saddr >> 16), byte(bpfevent.Saddr >> 24)},
+				Sport:         bpfevent.Sport,
 			}
-			fmt.Printf("networkevent: %v\n", networkevent)
+			// fmt.Printf("networkevent: %v\n", networkevent)
 			eventCh <- networkevent
 		}
 	}()

@@ -3,6 +3,7 @@ package fileopen
 import (
 	"bytes"
 	"ebpf_exporter/event"
+	"ebpf_exporter/util"
 	"encoding/binary"
 	"errors"
 	"log"
@@ -61,13 +62,14 @@ func InitFileopen(stopper <-chan struct{}, eventCh chan<- event.IEvent) {
 			}
 			// 打印 bpfEvent 结构体的内容
 			fileopenEvent := event.Fileopen_event{
-				Type:      "Fileopen_event",
-				Timestamp: bpfevent.Timestamp,
-				Pid:       bpfevent.Pid,
-				Comm:      unix.ByteSliceToString(bpfevent.Comm[:]),
-				Filename:  filename,
-				Fsname:    unix.ByteSliceToString(bpfevent.Fsname[:]),
-				Cid:       unix.ByteSliceToString(bpfevent.Cid[:]),
+				Type:          "Fileopen_event",
+				Timestamp:     bpfevent.Timestamp,
+				Pid:           bpfevent.Pid,
+				Comm:          unix.ByteSliceToString(bpfevent.Comm[:]),
+				Filename:      filename,
+				Fsname:        unix.ByteSliceToString(bpfevent.Fsname[:]),
+				Cid:           unix.ByteSliceToString(bpfevent.Cid[:]),
+				ContainerName: util.GetContainerName(unix.ByteSliceToString(bpfevent.Cid[:])),
 			}
 			eventCh <- fileopenEvent
 		}
