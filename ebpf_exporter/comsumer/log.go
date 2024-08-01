@@ -41,6 +41,7 @@ func StartPrint(eventCh <-chan event.IEvent) {
 		log.Printf("event type: %T, event: %s", event_, eventJson)
 	}
 }
+
 func StartHttp(eventCh <-chan event.IEvent) {
 
 	http.HandleFunc("/events", func(w http.ResponseWriter, r *http.Request) {
@@ -64,5 +65,4 @@ func StartHttp(eventCh <-chan event.IEvent) {
 	if err := http.ListenAndServe("192.168.0.202:8089", nil); err != nil {
 		log.Println("http server err: ", err)
 	}
-
 }
