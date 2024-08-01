@@ -3,6 +3,7 @@ package cmd
 import (
 	"ebpf_exporter/comsumer"
 	"ebpf_exporter/event"
+	"ebpf_exporter/route"
 	"ebpf_exporter/userspace"
 	"fmt"
 	"os"
@@ -29,6 +30,9 @@ func run(cmd *cobra.Command, args []string) {
 	ebpfstopper := make(chan struct{}, 1)
 
 	go userspace.Run(ebpfstopper, eventCh)
+
+	// 启动http服务, 容器信息
+	go route.ContainerInfoServer()
 
 	// 启动消费者
 	// go comsumer.StartPrint(eventCh)
