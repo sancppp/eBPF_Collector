@@ -2,11 +2,10 @@ package route
 
 import (
 	"ebpf_exporter/util"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/bytedance/sonic"
 )
 
 func containerInfoHandler(w http.ResponseWriter, r *http.Request) {
@@ -17,7 +16,7 @@ func containerInfoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	data, err := sonic.Marshal(containerInfos)
+	data, err := json.Marshal(containerInfos)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error encoding response: %v", err), http.StatusInternalServerError)
 		return

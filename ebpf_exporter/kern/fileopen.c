@@ -35,8 +35,6 @@ static void get_dentry_name_core(struct dentry *den, char *name) {
   add_head_slash(name);
 }
 
-static void get_full_file_path_core(struct file *fi, u8 *filename) {}
-
 // https://elixir.bootlin.com/linux/v6.5/source/fs/namei.c#L3812
 SEC("kretprobe/do_filp_open")
 int BPF_KRETPROBE(kretprobe_do_filp_open, struct file *filp) {

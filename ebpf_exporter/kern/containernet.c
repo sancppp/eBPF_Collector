@@ -140,3 +140,4 @@ int BPF_KPROBE(kprobe_tcp_v4_do_rcv, struct sock *sk, struct sk_buff *skb) {
 
   return 0;
 }
+#undef TCP_SKB_CB

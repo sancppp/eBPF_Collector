@@ -2,10 +2,9 @@ package comsumer
 
 import (
 	"ebpf_exporter/event"
+	"encoding/json"
 	"log"
 	"os"
-
-	"github.com/bytedance/sonic"
 )
 
 func StartLog(eventCh <-chan event.IEvent) {
@@ -21,9 +20,9 @@ func StartLog(eventCh <-chan event.IEvent) {
 
 	for event_ := range eventCh {
 		// 将类型+json作为日志打印
-		eventJson, err := sonic.Marshal(event_)
+		eventJson, err := json.Marshal(event_)
 		if err != nil {
-			log.Printf("sonic.Marshal error: %v", err)
+			log.Printf("json.Marshal error: %v", err)
 			continue
 		}
 		log.Printf("event type: %T, event: %s", event_, eventJson)
@@ -33,9 +32,9 @@ func StartLog(eventCh <-chan event.IEvent) {
 func StartPrint(eventCh <-chan event.IEvent) {
 	for event_ := range eventCh {
 		// 将类型+json作为日志打印
-		eventJson, err := sonic.Marshal(event_)
+		eventJson, err := json.Marshal(event_)
 		if err != nil {
-			log.Printf("sonic.Marshal error: %v", err)
+			log.Printf("json.Marshal error: %v", err)
 			continue
 		}
 		log.Printf("event type: %T, event: %s", event_, eventJson)

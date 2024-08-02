@@ -2,11 +2,11 @@ package comsumer
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"ebpf_exporter/event"
 
-	"github.com/bytedance/sonic"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -31,7 +31,7 @@ func StartKafka(eventCh <-chan event.IEvent) {
 
 	// Start a goroutine to read from eventCh and write to Kafka
 	for evt := range eventCh {
-		js, _ := sonic.Marshal(evt)
+		js, _ := json.Marshal(evt)
 		_, err := conn.WriteMessages(
 			kafka.Message{Value: js},
 		)
