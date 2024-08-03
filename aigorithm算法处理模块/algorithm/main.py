@@ -74,9 +74,12 @@ def get_container_name_by_ip(ip, config):
     return None
 
 def handler(event):
-    config = load_config(config_file)
-    anomaly_syscalls = config.get('syscall_id', [])
-    high_risk_paths = config.get('high_risk_paths', [])
+    try:
+        config = load_config(config_file)
+        anomaly_syscalls = config.get('syscall_id', [])
+        high_risk_paths = config.get('high_risk_paths', [])
+    except Exception as e:
+        return
     found_anomalies = False
     if event["Type"] == "Syscall_event":
         if event["Flag"] == 2 and event["Syscall"] in anomaly_syscalls:
@@ -103,25 +106,11 @@ def handler(event):
     if not found_anomalies:
         pass
 
-def load_container_info():
-    url = 'http://192.168.0.202:8888/containerinfo'
-    response = requests.get(url)
-    if response.status_code == 200:
-        container_info = response.json()
-        config = load_config(config_file)
-        config['containers'] = {container['Name']: {'cid': container['CID'], 'ip': container['IP']} for container in container_info}
-        save_config(config, config_file)
-        print("容器信息已更新到配置文件")
-    else:
-        print(f"无法获取容器信息，状态码: {response.status_code}")
 
 def main():
     # 启动 Prometheus HTTP 服务器，监听 2024 端口
     start_http_server(2024)
     print("Prometheus HTTP server started on port 2024")
-
-    # 从8888端口获取容器信息，更新配置文件
-    load_container_info()
 
     for event in fetch_events_from_kafka():
         update_metrics(event)
