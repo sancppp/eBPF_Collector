@@ -65,6 +65,9 @@ int BPF_KRETPROBE(kretprobe_sock_alloc_ret, struct socket *sock) {
 // https://elixir.bootlin.com/linux/v5.10.134/source/net/ipv4/tcp_output.c#L1240
 SEC("kprobe/__tcp_transmit_skb")
 int BPF_KPROBE(kprobe_tcp_transmit_skb) {
+  if (get_task_level_core((struct task_struct *)bpf_get_current_task()) == 0) {
+    return 0;
+  }
   struct sock *sk = (struct sock *)PT_REGS_PARM1(ctx);
   struct task_struct *sock_task;
   struct task_struct **psock_task;
@@ -106,6 +109,9 @@ int BPF_KPROBE(kprobe_tcp_transmit_skb) {
 // https://elixir.bootlin.com/linux/v5.10.134/source/net/ipv4/tcp_ipv4.c#L1668
 SEC("kprobe/tcp_v4_do_rcv")
 int BPF_KPROBE(kprobe_tcp_v4_do_rcv, struct sock *sk, struct sk_buff *skb) {
+  if (get_task_level_core((struct task_struct *)bpf_get_current_task()) == 0) {
+    return 0;
+  }
   struct task_struct *sock_task;
   struct task_struct **psock_task;
   struct socket *sock = BPF_CORE_READ(sk, sk_socket);
