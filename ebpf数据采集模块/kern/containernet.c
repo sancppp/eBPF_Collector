@@ -1,6 +1,14 @@
 #include "common.h"
 #include "vmlinux.h"
 // copy
+
+struct {
+  __uint(type, BPF_MAP_TYPE_HASH);
+  __type(key, u64);
+  __type(value, u8);
+  __uint(max_entries, 1024);
+} cnetwork_banned SEC(".maps");
+
 struct visit_key_t {
   u32 seq;
   u32 saddr;
@@ -34,13 +42,6 @@ struct {
   __type(value, struct task_struct *);
   __uint(max_entries, 1024);
 } socktable SEC(".maps");
-
-struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __type(key, struct visit_key_t);
-  __type(value, struct visit_value);
-  __uint(max_entries, 1024);
-} visit_table SEC(".maps");
 
 struct {
   __uint(type, BPF_MAP_TYPE_RINGBUF);
@@ -92,6 +93,25 @@ int BPF_KPROBE(kprobe_tcp_transmit_skb) {
     event->saddr = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
   }
 
+  if (event->daddr == 0 || event->saddr == 0) {
+    bpf_ringbuf_discard(event, 0);
+    return 0;
+  }
+
+  if (event->daddr == 0 || event->saddr == 0) {
+    bpf_ringbuf_discard(event, 0);
+    return 0;
+  }
+  // 网络事件过滤
+  u64 tmpa = 1ll * event->daddr << 32 | event->saddr;
+  u64 tmpb = 1ll * event->saddr << 32 | event->daddr;
+  bpf_printk("tmpa: %lld, tmpb: %lld\n", tmpa, tmpb);
+  if ((bpf_map_lookup_elem(&cnetwork_banned, &tmpa) == NULL) &&
+      (bpf_map_lookup_elem(&cnetwork_banned, &tmpb) == NULL)) {
+    bpf_ringbuf_discard(event, 0);
+    return 0;
+  }
+
   event->dport = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
   event->sport = BPF_CORE_READ(sk, __sk_common.skc_num);
 
@@ -139,6 +159,20 @@ int BPF_KPROBE(kprobe_tcp_v4_do_rcv, struct sock *sk, struct sk_buff *skb) {
     event->daddr = BPF_CORE_READ(sk, __sk_common.skc_daddr);
     event->saddr = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
   }
+  if (event->daddr == 0 || event->saddr == 0) {
+    bpf_ringbuf_discard(event, 0);
+    return 0;
+  }
+  // 网络事件过滤
+  u64 tmpa = 1ll * event->daddr << 32 | event->saddr;
+  u64 tmpb = 1ll * event->saddr << 32 | event->daddr;
+  bpf_printk("tmpa: %lld, tmpb: %lld\n", tmpa, tmpb);
+  if ((bpf_map_lookup_elem(&cnetwork_banned, &tmpa) == NULL) &&
+      (bpf_map_lookup_elem(&cnetwork_banned, &tmpb) == NULL)) {
+    bpf_ringbuf_discard(event, 0);
+    return 0;
+  }
+
   event->dport = bpf_ntohs(BPF_CORE_READ(sk, __sk_common.skc_dport));
   event->sport = BPF_CORE_READ(sk, __sk_common.skc_num);
 

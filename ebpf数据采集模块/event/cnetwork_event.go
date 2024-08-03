@@ -8,9 +8,9 @@ type CNetwork_event struct {
 	Cid           string
 	ContainerName string
 	Flag          uint8
-	Daddr         [4]byte /* uint128 */
+	Daddr         [4]byte
 	Dport         uint16
-	Saddr         [4]byte /* uint128 */
+	Saddr         [4]byte
 	Sport         uint16
 }
 

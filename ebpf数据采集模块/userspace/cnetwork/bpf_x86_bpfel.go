@@ -27,20 +27,6 @@ type bpfCnetworkEvent struct {
 	_         [6]byte
 }
 
-type bpfVisitKeyT struct {
-	Seq   uint32
-	Saddr uint32
-	Daddr uint32
-	Sport uint16
-	Dport uint16
-}
-
-type bpfVisitValue struct {
-	Cid    [12]uint8
-	Comm   [16]uint8
-	ScFlag uint8
-}
-
 // loadBpf returns the embedded CollectionSpec for bpf.
 func loadBpf() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_BpfBytes)
@@ -91,9 +77,9 @@ type bpfProgramSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type bpfMapSpecs struct {
+	CnetworkBanned *ebpf.MapSpec `ebpf:"cnetwork_banned"`
 	ContainernetRb *ebpf.MapSpec `ebpf:"containernet_rb"`
 	Socktable      *ebpf.MapSpec `ebpf:"socktable"`
-	VisitTable     *ebpf.MapSpec `ebpf:"visit_table"`
 }
 
 // bpfObjects contains all objects after they have been loaded into the kernel.
@@ -115,16 +101,16 @@ func (o *bpfObjects) Close() error {
 //
 // It can be passed to loadBpfObjects or ebpf.CollectionSpec.LoadAndAssign.
 type bpfMaps struct {
+	CnetworkBanned *ebpf.Map `ebpf:"cnetwork_banned"`
 	ContainernetRb *ebpf.Map `ebpf:"containernet_rb"`
 	Socktable      *ebpf.Map `ebpf:"socktable"`
-	VisitTable     *ebpf.Map `ebpf:"visit_table"`
 }
 
 func (m *bpfMaps) Close() error {
 	return _BpfClose(
+		m.CnetworkBanned,
 		m.ContainernetRb,
 		m.Socktable,
-		m.VisitTable,
 	)
 }
 
