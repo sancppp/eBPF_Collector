@@ -3,6 +3,7 @@ import aiohttp
 import random
 import string
 import logging
+import argparse
 
 # 设置日志配置
 logging.basicConfig(level=logging.INFO)
@@ -10,16 +11,16 @@ logger = logging.getLogger(__name__)
 
 PUT_URL = 'http://192.168.0.202:8080/put'
 GET_URL = 'http://192.168.0.202:8080/get'
-REQUESTS_PER_SECOND = 100  # 每秒请求数
-NUM_KEYS = 1000  # 预生成的随机键数量
+
+# 从 keys.txt 文件中读取键
+def load_keys(filename='keys.txt'):
+    with open(filename, 'r') as f:
+        keys = [line.strip() for line in f if line.strip()]
+    return keys
 
 # 生成随机字符串
 def random_string(length=100):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-# 生成随机键列表
-def generate_keys(num_keys=NUM_KEYS, length=100):
-    return [random_string(length) for _ in range(num_keys)]
 
 async def put_request(session, key):
     value = random_string()
@@ -38,28 +39,27 @@ async def get_request(session, key):
         else:
             await response.text()
 
-async def put_worker(session, keys):
+async def worker(session, keys, requests_per_second):
     while True:
         key = random.choice(keys)
-        await put_request(session, key)
-        await asyncio.sleep(1 / REQUESTS_PER_SECOND)
+        if random.choice([True, False]):
+            await put_request(session, key)
+        else:
+            await get_request(session, key)
+        await asyncio.sleep(1 / requests_per_second)
 
-async def get_worker(session, keys):
-    while True:
-        key = random.choice(keys)
-        await get_request(session, key)
-        await asyncio.sleep(1 / REQUESTS_PER_SECOND)
-
-async def main():
-    keys = generate_keys()
+async def main(requests_per_second):
+    keys = load_keys()
 
     async with aiohttp.ClientSession() as session:
-        # 启动 PUT 和 GET 请求的 workers
-        put_workers = [asyncio.create_task(put_worker(session, keys)) for _ in range(REQUESTS_PER_SECOND)]
-        get_workers = [asyncio.create_task(get_worker(session, keys)) for _ in range(REQUESTS_PER_SECOND)]
+        # 启动混合 PUT 和 GET 请求的 workers
+        workers = [asyncio.create_task(worker(session, keys, requests_per_second)) for _ in range(requests_per_second)]
 
         # 一直运行
-        await asyncio.gather(*put_workers, *get_workers)
+        await asyncio.gather(*workers)
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="HTTP Pressure Testing Tool")
+    parser.add_argument('requests_per_second', type=int, help='Number of requests per second')
+    args = parser.parse_args()
+    asyncio.run(main(args.requests_per_second))
