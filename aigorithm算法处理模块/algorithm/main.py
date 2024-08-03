@@ -92,6 +92,8 @@ def handler(event):
             print("发现异常文件访问: ", event)
             kafka_produce(f'容器{event["ContainerName"]}(cid: {event["Cid"]})中的进程{event["Comm"]}(pid: {event["Pid"]})打开了文件{filepath}')
     elif event["Type"] == "Network_event":
+        if event["Flag"] == 1:
+            return
         saddr = '.'.join(map(str, event.get('Saddr')))
         daddr = '.'.join(map(str, event.get('Daddr')))
         if event["Pid"] > 30 and check_container_network_event(event, config):

@@ -105,7 +105,7 @@ export default {
       }
     },
     setupWebSocket() {
-      const ws = new WebSocket('ws://localhost:8090');
+      const ws = new WebSocket('ws://192.168.0.249:8090');
       console.log('WebSocket client created');
 
       ws.onopen = () => {
