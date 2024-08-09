@@ -28,32 +28,6 @@
 
 [chengshuyi.csy@alibaba-inc.com](mailto:chengshuyi.csy@alibaba-inc.com)
 
-### 1.4. 参考资料
-
-Docker, 2024, https://www.docker.com/. (Accessed March 7, 2024).
-
-P. Sharma, L. Chaufournier, P. Shenoy, Y. Tay, Containers and virtual machines at scale: A comparative study, in: Proceedings of International Middleware Conference, Middleware, 2016, pp. 1–13.
-
-M. Plauth, L. Feinbube, A. Polze, A performance survey of lightweight virtualization techniques, in: Proceedings of European Conference on Service-Oriented and Cloud Computing, ESOCC, 2017, pp. 34–48.
-
-Y. Li, J. Zhang, C. Jiang, J. Wan, Z. Ren, PINE: Optimizing performance isolation in container environments, IEEE Access 7 (2019) 30410–30422. 
-
-J. Khalid, E. Rozner, W. Felter, C. Xu, K. Rajamani, A. Ferreira, A. Akella, Iron: Isolating network-based CPU in container environments, in: Proceedings of USENIX Symposium on Networked Systems Design and Implementation, NSDI, 2018, pp. 313–328.
-
-S. Soltesz, H. Pötzl, M.E. Fiuczynski, A. Bavier, L. Peterson, Container-based operating system virtualization: A scalable, high-performance alternative to hypervisors, in: Proceedings of European Conference on Computer Systems, EuroSys, 2007, pp. 275–287. 
-
-O. Laadan, J. Nieh, Operating system virtualization: Practice and experience, in: Proceedings of Annual Haifa Experimental Systems Conference, SYSTOR, 2010, pp. 1–12.
-
-X. Gao, Z. Gu, M. Kayaalp, D. Pendarakis, H. Wang, ContainerLeaks: Emerging security threats of information leakages in container clouds, in: Proceedings of International Conference on Dependable Systems and Networks, DSN, 2017, pp. 237–248. 
-
-X. Gao, Z. Gu, Z. Li, H. Jamjoom, C. Wang, Houdini’s escape: Breaking the resource rein of Linux control groups, in: Proceedings of ACM SIGSAC Conference on Computer and Communications Security, CCS, 2019, pp. 1073–1086.
-
-Cilium, https://cilium.io/. (Accessed March 7, 2024).
-
-Falco, [https://falco.org/.](https://falco.org/) (Accessed March 7, 2024).
-
-BCC, https://github.com/iovisor/bcc. (Accessed March 7, 2024).
-
 ## 2. 项目结构
 
 ### 2.1 [ebpf数据采集模块](./ebpf数据采集模块/)
