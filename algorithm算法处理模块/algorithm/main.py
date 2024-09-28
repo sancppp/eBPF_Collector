@@ -1,9 +1,9 @@
 from prometheus_client import start_http_server, Counter
 import time
-from kafka import KafkaProducer, KafkaConsumer
 import json
 import yaml
 import requests
+from confluent_kafka import Producer, Consumer
 from syscallid import syscall_name
 
 # 定义 Counter
@@ -12,25 +12,25 @@ event_counter = Counter(
     'Counter for syscall events',
     ['name', 'syscall']
 )
-config_file = '/home/tzx/rqyc/aigorithm算法处理模块/config.yml'
+config_file = '/home/tzx/songshanhu/algorithm算法处理模块/config.yml'
 
 def read_syscall_anomalies_from_file(filename):
     with open(filename, 'r') as file:
         anomalies = [int(line.strip()) for line in file]
     return anomalies
 
-def fetch_events_from_kafka():
-    consumer = KafkaConsumer(
-        'event',
-        bootstrap_servers=['localhost:19092'],
-        value_deserializer=lambda v: json.loads(v.decode('utf-8'))
-    )
-    for message in consumer:
-        events = message.value
-        yield events
+def fetch_events_from_kafka(consumer):
+    consumer.subscribe(['event'])
+    while True:
+        msg = consumer.poll(1.0)  # 等待1秒钟，获取消息
+        if msg is None:
+            continue
+        if msg.error():
+            print(f"Kafka error: {msg.error()}")
+            continue
+        yield json.loads(msg.value().decode('utf-8'))
 
 def update_metrics(event):
-    # 只处理满足条件 "Type" == "Syscall_event" 且 "Flag" == 2 的事件
     if event.get('Type') == 'Syscall_event' and event.get('Flag') == 2:
         labels = {
             'name': event['ContainerName'],
@@ -40,13 +40,8 @@ def update_metrics(event):
         event_counter.labels(**labels).inc(ret_value)
 
 def kafka_produce(message):
-    producer = KafkaProducer(
-        bootstrap_servers=['localhost:19092'],
-        value_serializer=lambda v: json.dumps(v).encode('utf-8')
-    )
-
-    # 发送消息到 Kafka 的 alarm 主题
-    producer.send('alarm', value=message)
+    producer = Producer({'bootstrap.servers': 'localhost:19092'})
+    producer.produce('alarm', value=message)
     producer.flush()
 
 def load_config(config_file):
@@ -68,7 +63,7 @@ def check_container_network_event(record, config):
 
 def get_container_name_by_ip(ip, config):
     for container_name, container_info in config.get('containers', {}).items():
-        container_ip = container_info['ip'].split('/')[0]  # 去除子网掩码部分
+        container_ip = container_info['ip'].split('/')[0]
         if ip == container_ip:
             return container_name
     return None
@@ -106,15 +101,23 @@ def handler(event):
     if not found_anomalies:
         pass
 
-
 def main():
     # 启动 Prometheus HTTP 服务器，监听 2024 端口
     start_http_server(2024)
     print("Prometheus HTTP server started on port 2024")
 
-    for event in fetch_events_from_kafka():
+    # 初始化 Kafka Consumer
+    consumer = Consumer({
+        'bootstrap.servers': 'localhost:19092',
+        'group.id': 'my_group',
+        'auto.offset.reset': 'earliest'
+    })
+
+    for event in fetch_events_from_kafka(consumer):
         update_metrics(event)
         handler(event)
+
+    consumer.close()
 
 if __name__ == "__main__":
     main()

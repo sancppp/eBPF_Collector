@@ -1,0 +1,58 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mbssmbss
+      MYSQL_DATABASE: sample
+    # ports:
+    #   - "3306:3306"
+
+  kv_server0:
+    build: ./kv_server
+    container_name: kv_server0
+    depends_on:
+      - mysql
+    # ports:
+    #   - "8088:8081"
+    environment:
+      DB_USER: root
+      DB_PASSWORD: mbssmbss
+      DB_NAME: sample
+      DB_HOST: mysql
+
+  kv_server1:
+    build: ./kv_server
+    container_name: kv_server1
+    depends_on:
+      - mysql
+    # ports:
+    #   - "8088:8081"
+    environment:
+      DB_USER: root
+      DB_PASSWORD: mbssmbss
+      DB_NAME: sample
+      DB_HOST: mysql
+
+  kv_server2:
+    build: ./kv_server
+    container_name: kv_server2
+    depends_on:
+      - mysql
+    # ports:
+    #   - "8088:8081"
+    environment:
+      DB_USER: root
+      DB_PASSWORD: mbssmbss
+      DB_NAME: sample
+      DB_HOST: mysql
+
+  api_server:
+    build: ./api_server
+    container_name: api_server
+    depends_on:
+      - kv_server0
+      - kv_server1
+      - kv_server2
+    ports:
+      - "8080:8080"
