@@ -72,8 +72,8 @@ async def main():
     await kafka_consumer.start_consumer()
 
     # 启动 WebSocket 服务器
-    websocket_server = await websockets.serve(websocket_handler, "192.168.0.249", 8090)
-    logger.info("WebSocket server is running on ws://192.168.0.249:8090")
+    websocket_server = await websockets.serve(websocket_handler, "192.168.252.128", 8090)
+    logger.info("WebSocket server is running on ws://192.168.252.128:8090")
 
     await websocket_server.wait_closed()  # 保持 WebSocket 服务器运行
 

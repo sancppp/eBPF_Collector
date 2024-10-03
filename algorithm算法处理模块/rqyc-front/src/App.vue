@@ -68,7 +68,7 @@ export default {
   methods: {
     async putData() {
       try {
-        const res = await axios.get('http://192.168.0.202:8080/put', {
+        const res = await axios.get('http://192.168.252.131:8080/put', {
           params: { key: this.putKey, value: this.putValue },
         });
         this.response = res.data;
@@ -78,7 +78,7 @@ export default {
     },
     async getData() {
       try {
-        const res = await axios.get('http://192.168.0.202:8080/get', {
+        const res = await axios.get('http://192.168.252.131:8080/get', {
           params: { key: this.getKey },
         });
         this.response = res.data;
@@ -88,7 +88,7 @@ export default {
     },
     async cmdData() {
       try {
-        const res = await axios.get('http://192.168.0.202:8080/cmd', {
+        const res = await axios.get('http://192.168.252.131:8080/cmd', {
           params: { cmd: this.cmd },
         });
         this.response = res.data;
@@ -98,14 +98,14 @@ export default {
     },
     async dbData() {
       try {
-        const res = await axios.get('http://192.168.0.202:8080/db');
+        const res = await axios.get('http://192.168.252.131:8080/db');
         this.response = res.data;
       } catch (error) {
         this.response = error.message;
       }
     },
     setupWebSocket() {
-      const ws = new WebSocket('ws://192.168.0.249:8090');
+      const ws = new WebSocket('ws://192.168.252.128:8090');
       console.log('WebSocket client created');
 
       ws.onopen = () => {

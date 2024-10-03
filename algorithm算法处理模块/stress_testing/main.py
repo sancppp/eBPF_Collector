@@ -9,8 +9,8 @@ import argparse
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-PUT_URL = 'http://192.168.0.202:8080/put'
-GET_URL = 'http://192.168.0.202:8080/get'
+PUT_URL = 'http://192.168.252.131:8080/put'
+GET_URL = 'http://192.168.252.131:8080/get'
 
 # 从 keys.txt 文件中读取键
 def load_keys(filename='keys.txt'):

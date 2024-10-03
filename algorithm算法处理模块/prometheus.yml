@@ -6,9 +6,9 @@ scrape_configs:
   - job_name: "ebpf"
     metrics_path: /metrics
     static_configs:
-      - targets: ["192.168.31.172:2024"]
+      - targets: ["192.168.252.128:2024"]
 
   - job_name: "cadvisor"
     metrics_path: /metrics
     static_configs:
-      - targets: ["192.168.31.68:8000"]
+      - targets: ["192.168.252.131:8000"]

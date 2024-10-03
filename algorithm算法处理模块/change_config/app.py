@@ -9,7 +9,7 @@ app.secret_key = 'your_secret_key'
 config_file_path = '/home/tzx/rqyc/aigorithm算法处理模块/config.yml'
 
 def load_container_info():
-    url = 'http://192.168.0.202:8888/containerinfo'
+    url = 'http://192.168.252.131:8888/containerinfo'
     response = requests.get(url)
     if response.status_code == 200:
         container_info = response.json()
@@ -34,7 +34,7 @@ def save_config(config):
         yaml.safe_dump(config, file, default_flow_style=False, sort_keys=False, indent=2, width=80)
 
 def clear_network_blacklist():
-    url = 'http://192.168.0.202:8889/cnetworkclean'
+    url = 'http://192.168.252.131:8889/cnetworkclean'
     response = requests.get(url)
     if response.status_code == 200:
         print("网络黑名单已清空")
@@ -42,7 +42,7 @@ def clear_network_blacklist():
         print(f"无法清空网络黑名单，状态码: {response.status_code}")
 
 def update_network_config(deny_rules):
-    base_url = 'http://192.168.0.202:8889/cnetworkconfig'
+    base_url = 'http://192.168.252.131:8889/cnetworkconfig'
     for rule in deny_rules:
         from_ip = rule['from']
         to_ip = rule['to']

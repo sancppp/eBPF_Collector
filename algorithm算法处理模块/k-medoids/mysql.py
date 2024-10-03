@@ -2,7 +2,7 @@ import requests
 import pymysql
 
 # 从 HTTP 请求中获取数据
-url = 'http://192.168.0.202:8089/events'
+url = 'http://192.168.252.131:8089/events'
 response = requests.get(url)
 
 if response.status_code == 200:
@@ -15,7 +15,7 @@ else:
 # 连接到 MySQL 数据库
 try:
     connection = pymysql.connect(
-        host='192.168.0.249',
+        host='192.168.252.128',
         database='rqyc',
         user='root',
         password='123456',

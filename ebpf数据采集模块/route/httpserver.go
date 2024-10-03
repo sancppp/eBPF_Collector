@@ -41,7 +41,7 @@ func containerInfoHandler(w http.ResponseWriter, r *http.Request) {
 
 func ContainerInfoServer() {
 	http.HandleFunc("/containerinfo", containerInfoHandler)
-	log.Println("Starting containerinfo server on http://192.168.0.202:8888/containerinfo")
+	log.Println("Starting containerinfo server on http://192.168.252.131:8888/containerinfo")
 	if err := http.ListenAndServe(":8888", nil); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}

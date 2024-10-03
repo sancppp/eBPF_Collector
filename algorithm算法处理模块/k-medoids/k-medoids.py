@@ -7,7 +7,7 @@ import json
 import requests
 
 
-url = 'http://192.168.0.202:8089/events'
+url = 'http://192.168.252.131:8089/events'
 response = requests.get(url)
 data = response.json()
 
