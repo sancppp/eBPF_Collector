@@ -113,8 +113,7 @@ export default {
       };
 
       ws.onmessage = (event) => {
-        console.log('WebSocket message received:', event.data);
-        const data = JSON.parse(event.data);
+        const data = event.data;
         this.kafkaEvents.unshift(data); // 将新事件插入到数组的头部
         this.animateEvent();
       };

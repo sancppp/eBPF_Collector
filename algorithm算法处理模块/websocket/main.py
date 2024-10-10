@@ -47,6 +47,7 @@ class KafkaConsumerSingleton:
             await self.consumer.stop()
 
 async def broadcast_message(message_value):
+    print(message_value)
     if connected_clients:
         logger.info(f"Broadcasting message to {len(connected_clients)} clients")
         await asyncio.gather(*[client.send(message_value) for client in connected_clients])

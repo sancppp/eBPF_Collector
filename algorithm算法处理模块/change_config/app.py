@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-config_file_path = '/home/tzx/rqyc/aigorithm算法处理模块/config.yml'
+config_file_path = '/home/tzx/songshanhu/algorithm算法处理模块/config.yml'
 
 def load_container_info():
     url = 'http://192.168.252.131:8888/containerinfo'
