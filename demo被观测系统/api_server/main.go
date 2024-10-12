@@ -66,7 +66,7 @@ func proxyHandler(c *gin.Context) {
 
 	kvserverurl := kvServerURLs[index]
 	index = (index + 1) % len(kvServerURLs)
-	// fmt.Printf("kvserverurl: %v\n", kvserverurl)
+
 	switch c.Request.URL.Path {
 	case "/put":
 		resp, err = client.Get(kvserverurl + "/put?" + c.Request.URL.RawQuery)
@@ -114,12 +114,13 @@ func dbHandler(c *gin.Context) {
 	const query = "SELECT id, `key`, `value` FROM rqyc_kv LIMIT 100"
 
 	rows, err := db.Query(query)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	defer rows.Close()
-	log.Println("rows: ", rows)
+	fmt.Println("rows: ", rows)
 	keyValues := make([]map[string]interface{}, 0)
 
 	// Scan all rows into memory to minimize network communication

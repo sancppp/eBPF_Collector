@@ -118,8 +118,9 @@ int BPF_KPROBE(kprobe_tcp_transmit_skb) {
     return 0;
   }
   // 网络事件过滤
-  u64 tmpa = 1ll * event->daddr << 32 | event->saddr;
-  u64 tmpb = 1ll * event->saddr << 32 | event->daddr;
+  u64 tmpa = ((1ll * event->daddr) << 32) | event->saddr;
+  u64 tmpb = ((1ll * event->saddr) << 32) | event->daddr;
+  bpf_printk("daddr: %d, saddr: %d\n",event->daddr,event->saddr);
   bpf_printk("tmpa: %lld, tmpb: %lld\n", tmpa, tmpb);
   if ((bpf_map_lookup_elem(&cnetwork_banned, &tmpa) == NULL) &&
       (bpf_map_lookup_elem(&cnetwork_banned, &tmpb) == NULL)) {
