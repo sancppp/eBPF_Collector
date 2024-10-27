@@ -24,6 +24,6 @@ import (
 var cli *client.Client
 
 func init() {
-	os.Setenv("DOCKER_API_VERSION", "1.45")
+	os.Setenv("DOCKER_API_VERSION", "1.41")
 	cli, _ = client.NewClientWithOpts(client.FromEnv)
 }

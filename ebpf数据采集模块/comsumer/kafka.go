@@ -26,7 +26,7 @@ import (
 )
 
 var (
-	addr      = "192.168.0.249:19092"
+	addr      = "192.168.252.128:19092"
 	topic     = "event"
 	partition = 0
 )

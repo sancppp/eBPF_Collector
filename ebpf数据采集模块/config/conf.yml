@@ -7,7 +7,7 @@ comsumer:
   - "kafka"
 
 kafka:
-  brokers: "192.168.0.249:9092"
+  brokers: "192.168.252.128:9092"
   topic: "event"
   partition: 0
   offset: "latest"

@@ -1,0 +1,26 @@
+containers:
+  /api_server:
+    cid: c6c6318ef66fb0dfd47fff18447e8764fd994475f89fa736d2f17a1ff2e2f20d
+    ip: 172.18.0.6
+  /kv_server2:
+    cid: b34f078e0b4826d9fa82c2286658ae40d82e49628a6a3e4d7294d98e3f3b16c7
+    ip: 172.18.0.3
+  /kv_server0:
+    cid: dee8a8b1a6befafbe762004098ed9dc3635273e6f03def1bc38f288eabd2cf84
+    ip: 172.18.0.4
+  /kv_server1:
+    cid: 8bec456534356a985be1308ff19e506ad19b062f0820e1f01ba9a933c496d7e6
+    ip: 172.18.0.5
+  /mysql:
+    cid: fda902e7e26f4e6e3f92aca3c382fe69d140c4fa07f61ee514fd1a18deb61cfa
+    ip: 172.18.0.2
+high_risk_paths:
+- /etc
+- /bin
+rules:
+  deny:
+  - from: 172.18.0.6
+    to: 172.18.0.2
+syscall_id:
+- 59
+- 83
