@@ -27,6 +27,7 @@ anolis
 
 ```shell
 cd ebpfXxx
+go generate ./...
 go build
 sudo ./ebpf_exporter
 
